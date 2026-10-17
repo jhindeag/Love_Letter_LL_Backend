@@ -1,3 +1,4 @@
+package entities;
 
 import java.util.ArrayList;
 
@@ -6,15 +7,12 @@ public class Player {
     private boolean isAlive = true;
     private ArrayList<Card> hand = new ArrayList<>();
     private ArrayList<Card> discardPile = new ArrayList<>();
-    private boolean isKO = false;
     private boolean isProtected = false;
     private int hasPrince = 0;
     private int hasKing = 0;
-    private int hasCountess = 0;
     private int hasAssassin = 0;
     private int hasCount = 0;
     private int hasConstable = 0;
-    private int finalPoint = 0;
     private int winningTokenCount = 0;
 
     public Player(String name) {
@@ -26,6 +24,9 @@ public class Player {
     }
 
     public ArrayList<Card> getHand() {
+        if (!isAlive) {
+            hand.set(0, new Card("KNOCKED OUT!"));
+        }
         return this.hand;
     }
 
@@ -40,9 +41,6 @@ public class Player {
             }
             case "King" -> {
                 hasKing += 1;
-            }
-            case "Countess" -> {
-                hasCountess += 1;
             }
         }
 
@@ -65,9 +63,6 @@ public class Player {
             case "Constable" -> {
                 hasConstable++;
             }
-            case "Countess" -> {
-                hasCountess--;
-            }
             case "Princess" -> {
                 isAlive = false;
             }
@@ -87,5 +82,30 @@ public class Player {
 
     public void setIsProtected(boolean isProtected) {
         this.isProtected = isProtected;
+    }
+
+    public int getHasPrince() {
+        return hasPrince;
+    }
+
+    public int getHasKing() {
+        return hasKing;
+    }
+
+    public int getHasAssassin() {
+        return hasAssassin;
+    }
+
+    public int getHasConstable() {
+        return hasConstable;
+    }
+
+    public void earnWinningToken() {
+        System.out.println("Player " + name + " has earned a winning token!");
+        winningTokenCount++;
+    }
+
+    public boolean isIsProtected() {
+        return isProtected;
     }
 }

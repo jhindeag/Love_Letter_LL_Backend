@@ -1,3 +1,5 @@
+package entities;
+
 public class Card {
     private String name;
     private int val;
@@ -80,7 +82,9 @@ public class Card {
                 targetCount = 1;
                 canGuess = true;
             }
-            default -> throw new AssertionError("Illegal card name");
+            default -> {
+                // throw new AssertionError("Illegal card name: " + name);
+            }
         }
     }
 

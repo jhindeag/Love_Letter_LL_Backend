@@ -1,8 +1,11 @@
+import entities.*;
 import java.util.ArrayList;
 import java.util.Scanner;
+import logic.CardLogic;
 
 public class GameInstance {
     private ArrayList<Player> playerList = new ArrayList<>();
+    private CardLogic cardLogic;
     private CardPile cardPile;
     private Player currPlayer;
     private int currPlayerIndex;
@@ -15,9 +18,9 @@ public class GameInstance {
     private Player chosenPlayer2 = null;
     private int chosenNumber = -1;
     // private int validTargetCount;
-    private Player[] winners;
+    private ArrayList<Player> winners = new ArrayList<>();
     private Player sycophantForced;
-    private ArrayList<Player> jesterPair;
+    private ArrayList<Player> jesterPair = new ArrayList<>();
 
     public GameInstance(String[] playerList) {
         for (String name : playerList) {
@@ -27,6 +30,7 @@ public class GameInstance {
         currPlayerIndex = (int) Math.floor(Math.random() * this.playerList.size());
         currPlayer = this.playerList.get(currPlayerIndex);
         cardPile = new CardPile();
+        cardLogic = new CardLogic(jesterPair, currPlayer, sycophantForced, cardPile, chosenNumber, inputReader);
         deal();
         gameStart();
     }
@@ -35,50 +39,67 @@ public class GameInstance {
         for (int i = 0; i < playerCount; i++) {
             playerList.get(i).draw(cardPile.pop());
         }
-        playerList.get(currPlayerIndex).draw(cardPile.pop());
     }
 
     private void gameStart() {
-        showHands();
         // game starts here
-        System.out.println("Current player is: " + currPlayer.getName());
-        System.out.println("Hand of player is: " + currPlayer.getHand().toString());
-        System.out.print("Enter card index to play: ");
-        chosenCardIndex = inputReader.nextInt();
-        // Card stages:
-        // has targets? t/f
-        // how many targets? 1/2
-        // can target self? t/f
-        // can it guess? t/f
-        System.out.println("Chosen card index: " + chosenCardIndex);
-        playedCard = currPlayer.getHand().get(chosenCardIndex);
-        // fill data to play a card
-        if (playedCard.getTargetCount() > 0) {
-            // must target at least 1 player
-            System.out.print("Enter index of one player: ");
-            chosenPlayer1 = playerList.get(inputReader.nextInt());
-            // TODO: check if this card can target self
-
-            // check if this card can guess
-            if (playedCard.isCanGuess()) {
-                System.out.print("Enter a number to guess: ");
-                chosenNumber = inputReader.nextInt();
+        while (true) {
+            System.out.println("Current player is: " + currPlayer.getName());
+            currPlayer.draw(cardPile.pop());
+            showHands();
+            System.out.println("Hand of player is: " + currPlayer.getHand().toString());
+            System.out.print("Enter card index to play: ");
+            chosenCardIndex = inputReader.nextInt();
+            // Card stages:
+            // has targets? t/f
+            // how many targets6? 1/2
+            // can target self? t/f
+            // can it guess? t/f
+            playedCard = currPlayer.getHand().get(chosenCardIndex);
+            while (playedCard.getName() == "Countess"
+                    && (currPlayer.getHasKing() > 0 || currPlayer.getHasPrince() > 0)) {
+                System.out.println("You have to play Prince or King!");
+                System.out.print("Enter card index to play: ");
+                chosenCardIndex = inputReader.nextInt();
+                playedCard = currPlayer.getHand().get(chosenCardIndex);
             }
-
-            // check if this card can target 2 players
-            if (playedCard.getTargetCount() == 2) {
+            // played card get removed from hand
+            currPlayer.getHand().remove(chosenCardIndex);
+            // fill data to play a card
+            if (playedCard.getTargetCount() > 0) {
+                // must target at least 1 player
                 do {
-                    System.out.print("Enter index of another player: ");
-                    chosenPlayer2 = playerList.get(inputReader.nextInt());
-                } while (chosenPlayer2 == chosenPlayer1);
-            }
+                    System.out.print("Enter index of one player: ");
+                    chosenPlayer1 = playerList.get(inputReader.nextInt());
+                } while (chosenPlayer1.isIsAlive() && !chosenPlayer1.isIsProtected());
+                // TODO: check if this card can target self
 
+                // check if this card can guess
+                if (playedCard.isCanGuess()) {
+                    System.out.print("Enter a number to guess: ");
+                    chosenNumber = inputReader.nextInt();
+                }
+
+                // check if this card can target 2 players
+                if (playedCard.getTargetCount() == 2) {
+                    do {
+                        System.out.print("Enter index of another player: ");
+                        chosenPlayer2 = playerList.get(inputReader.nextInt());
+                    } while (chosenPlayer2 == chosenPlayer1);
+                }
+
+            }
+            playCard(playedCard, chosenPlayer1, chosenPlayer2, chosenNumber);
+            playedCard = null;
+            chosenPlayer1 = null;
+            chosenPlayer2 = null;
+            chosenNumber = -1;
+            // next player turn
+            do {
+                currPlayerIndex = (currPlayerIndex + 1) % (playerCount - 1);
+                currPlayer = playerList.get(currPlayerIndex);
+            } while (!currPlayer.isIsAlive());
         }
-        playCard(playedCard, chosenPlayer1, chosenPlayer2, chosenNumber);
-        playedCard = null;
-        chosenPlayer1 = null;
-        chosenPlayer2 = null;
-        chosenNumber = -1;
     }
 
     public void playCard(Card playedCard, Player chosenPlayer1, Player chosenPlayer2, int chosenNumber) {
@@ -142,67 +163,6 @@ public class GameInstance {
 
     }
 
-    // Cards logic
-    private void betOn(Player chosenPlayer1) {
-        jesterPair.add(currPlayer);
-        jesterPair.add(chosenPlayer1);
-    }
-
-    private void eliminate(Player chosenPlayer1, int chosenNumber) {
-        if (chosenNumber == chosenPlayer1.getHand().get(0).getVal()) {
-            knockOut(chosenPlayer1);
-        }
-    }
-
-    private void peek(Player chosenPlayer1, Player chosenPlayer2) {
-        if (chosenPlayer2 == null) {
-            chosenPlayer2 = new Player("");
-        }
-        System.out.println("Player 1 has: " + chosenPlayer1.getHand().get(0).getName());
-        System.out.println("Player 2 has: " + chosenPlayer2.getHand().get(0).getName());
-    }
-
-    private void swap(Player chosenPlayer1, Player chosenPlayer2) {
-        Card temp = chosenPlayer1.getHand().get(0);
-        chosenPlayer1.getHand().set(0, chosenPlayer2.getHand().get(0));
-        chosenPlayer2.getHand().set(0, temp);
-    }
-
-    private void compare(Player chosenPlayer1) {
-        if (currPlayer.getHand().get(0).getVal() > chosenPlayer1.getHand().get(0).getVal()) {
-            knockOut(chosenPlayer1);
-        } else if (chosenPlayer1.getHand().get(0).getVal() > currPlayer.getHand().get(0).getVal()) {
-            knockOut(currPlayer);
-        }
-    }
-
-    private void protect() {
-        currPlayer.setIsProtected(true);
-    }
-
-    private void force(Player chosenPlayer1) {
-        sycophantForced = chosenPlayer1;
-    }
-
-    private void discard(Player chosenPlayer1) {
-        chosenPlayer1.discard();
-        if (chosenPlayer1.isIsAlive()) {
-            chosenPlayer1.draw(cardPile.pop());
-        }
-    }
-
-    private void compareRev(Player chosenPlayer1) {
-        if (currPlayer.getHand().get(0).getVal() > chosenPlayer1.getHand().get(0).getVal()) {
-            knockOut(currPlayer);
-        } else if (chosenPlayer1.getHand().get(0).getVal() > currPlayer.getHand().get(0).getVal()) {
-            knockOut(chosenPlayer1);
-        }
-    }
-
-    private void knockOut(Player currPlayer1) {
-        currPlayer1.setIsAlive(false);
-    }
-
     public void showHands() {
         String s = "";
         for (Player player : this.playerList) {
@@ -214,10 +174,6 @@ public class GameInstance {
     public static void main(String[] args) {
         String[] playerList = { "A", "B", "C" };
         GameInstance newGame = new GameInstance(playerList);
-    }
-
-    private void guess(Player chosenPlayer1) {
-        throw new UnsupportedOperationException("Not supported yet.");
     }
 
 }
