@@ -6,31 +6,28 @@ import java.util.Scanner;
 
 public class CardLogic {
     private ArrayList<Player> jesterPair;
-    private Player currPlayer;
-    private Player sycophantForced;
     private CardPile cardPile;
-    private int chosenNumber;
     private Scanner inputReader;
+    private Player sycophantForced;
+    private int alivePlayerCount;
 
-    public CardLogic(ArrayList<Player> jesterPair, Player currPlayer, Player sycophantForced, CardPile cardPile,
-            int chosenNumber, Scanner inputReader) {
+    public CardLogic(ArrayList<Player> jesterPair, CardPile cardPile, Scanner inputReader, int alivePlayerCount) {
         this.jesterPair = jesterPair;
-        this.currPlayer = currPlayer;
-        this.sycophantForced = sycophantForced;
         this.cardPile = cardPile;
-        this.chosenNumber = chosenNumber;
         this.inputReader = inputReader;
+        this.alivePlayerCount = alivePlayerCount;
     }
 
     // Cards logic
-    public void betOn(Player chosenPlayer1) {
+    public void betOn(Player currPlayer, Player chosenPlayer1) {
         jesterPair.add(currPlayer);
         jesterPair.add(chosenPlayer1);
     }
 
-    public void eliminate(Player chosenPlayer1, int chosenNumber) {
+    public void eliminate(Player currPlayer, Player chosenPlayer1, int chosenNumber) {
         if (chosenPlayer1.getHasAssassin() > 0) {
             knockOut(currPlayer);
+            discard(chosenPlayer1);
         } else if (chosenNumber == chosenPlayer1.getHand().get(0).getVal()) {
             knockOut(chosenPlayer1);
         }
@@ -52,7 +49,7 @@ public class CardLogic {
 
     }
 
-    public void compare(Player chosenPlayer1) {
+    public void compare(Player currPlayer, Player chosenPlayer1) {
         if (currPlayer.getHand().get(0).getVal() > chosenPlayer1.getHand().get(0).getVal()) {
             knockOut(chosenPlayer1);
         } else if (chosenPlayer1.getHand().get(0).getVal() > currPlayer.getHand().get(0).getVal()) {
@@ -60,12 +57,12 @@ public class CardLogic {
         }
     }
 
-    public void protect() {
+    public void protect(Player currPlayer) {
         currPlayer.setIsProtected(true);
     }
 
     public void force(Player chosenPlayer1) {
-        sycophantForced = chosenPlayer1;
+        this.sycophantForced = chosenPlayer1;
     }
 
     public void discard(Player chosenPlayer1) {
@@ -75,7 +72,7 @@ public class CardLogic {
         }
     }
 
-    public void compareRev(Player chosenPlayer1) {
+    public void compareRev(Player currPlayer, Player chosenPlayer1) {
         if (currPlayer.getHand().get(0).getVal() > chosenPlayer1.getHand().get(0).getVal()) {
             knockOut(currPlayer);
         } else if (chosenPlayer1.getHand().get(0).getVal() > currPlayer.getHand().get(0).getVal()) {
@@ -83,7 +80,7 @@ public class CardLogic {
         }
     }
 
-    public void guess(Player chosenPlayer1) {
+    public void guess(Player currPlayer, Player chosenPlayer1, int chosenNumber) {
         if (chosenNumber == chosenPlayer1.getHand().get(0).getVal()) {
             currPlayer.earnWinningToken();
         }
@@ -94,10 +91,12 @@ public class CardLogic {
         }
     }
 
-    public void knockOut(Player currPlayer) {
-        currPlayer.knockedOut();
-        if (currPlayer.getActivatedConstable() > 0) {
-            currPlayer.earnWinningToken();
-        }
+    public void knockOut(Player player) {
+        player.knockedOut();
+        alivePlayerCount--;
+    }
+
+    public int getAlivePlayerCount() {
+        return alivePlayerCount;
     }
 }

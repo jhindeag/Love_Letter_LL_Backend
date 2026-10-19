@@ -17,5 +17,4 @@ public class GameInstance {
         String[] playerList = { "A", "B", "C" };
         GameInstance newGame = new GameInstance(playerList);
     }
-
 }

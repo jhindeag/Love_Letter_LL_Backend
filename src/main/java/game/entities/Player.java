@@ -56,6 +56,9 @@ public class Player {
     public void knockedOut() {
         System.out.println(name + " has been knocked out!");
         isAlive = false;
+        if (activatedConstable > 0) {
+            earnWinningToken();
+        }
     }
 
     public void syncHand() {
@@ -110,5 +113,9 @@ public class Player {
 
     public boolean isIsProtected() {
         return isProtected;
+    }
+
+    public int getWinningTokenCount() {
+        return winningTokenCount;
     }
 }

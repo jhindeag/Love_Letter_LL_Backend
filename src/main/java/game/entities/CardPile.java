@@ -38,6 +38,7 @@ public class CardPile {
         return this.cardList.pop();
     }
 
+    @Override
     public String toString() {
         String s = "[";
         for (Card card : this.cardList) {
@@ -45,6 +46,10 @@ public class CardPile {
         }
         s += "]";
         return s;
+    }
+
+    public int size() {
+        return cardList.size();
     }
 
     public static void main(String[] args) {
