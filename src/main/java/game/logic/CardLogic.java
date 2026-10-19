@@ -37,17 +37,19 @@ public class CardLogic {
     }
 
     public void peek(Player chosenPlayer1, Player chosenPlayer2) {
-        if (chosenPlayer2 == null) {
-            chosenPlayer2 = new Player("");
-        }
         System.out.println("Player 1 has: " + chosenPlayer1.getHand().get(0).getName());
-        System.out.println("Player 2 has: " + chosenPlayer2.getHand().get(0).getName());
+        if (chosenPlayer2 != null) {
+            System.out.println("Player 2 has: " + chosenPlayer2.getHand().get(0).getName());
+        }
     }
 
     public void swap(Player chosenPlayer1, Player chosenPlayer2) {
         Card temp = chosenPlayer1.getHand().get(0);
         chosenPlayer1.getHand().set(0, chosenPlayer2.getHand().get(0));
         chosenPlayer2.getHand().set(0, temp);
+        chosenPlayer1.syncHand();
+        chosenPlayer2.syncHand();
+
     }
 
     public void compare(Player chosenPlayer1) {
@@ -88,16 +90,14 @@ public class CardLogic {
         System.out.println("Do player " + chosenPlayer1.getName() + " want to discard?");
         String discard = inputReader.next();
         if (discard.toUpperCase() == "Y") {
-            chosenPlayer1.discard();
-            chosenPlayer1.draw(cardPile.pop());
+            discard(chosenPlayer1);
         }
     }
 
     public void knockOut(Player currPlayer) {
-        System.out.println(currPlayer.getName() + " has been knocked out!");
-        if (currPlayer.getHasConstable() > 0) {
+        currPlayer.knockedOut();
+        if (currPlayer.getActivatedConstable() > 0) {
             currPlayer.earnWinningToken();
         }
-        currPlayer.setIsAlive(false);
     }
 }

@@ -1,31 +1,30 @@
-import entities.*;
+package logic;
+
 import java.util.ArrayList;
 import java.util.Scanner;
-import logic.CardLogic;
+import entities.*;
 
-public class GameInstance {
-    private ArrayList<Player> playerList = new ArrayList<>();
+public class GameManager {
+    private ArrayList<Player> playerList;
     private CardLogic cardLogic;
     private CardPile cardPile;
     private Player currPlayer;
     private int currPlayerIndex;
     private int playerCount;
-    private Scanner inputReader = new Scanner(System.in);
+    private final Scanner inputReader = new Scanner(System.in);
     // private int alivePlayerCount;
     private int chosenCardIndex = -1;
     private Card playedCard = null;
     private Player chosenPlayer1 = null;
     private Player chosenPlayer2 = null;
     private int chosenNumber = -1;
-    // private int validTargetCount;
+    private int validTargetCount;
     private ArrayList<Player> winners = new ArrayList<>();
     private Player sycophantForced;
     private ArrayList<Player> jesterPair = new ArrayList<>();
 
-    public GameInstance(String[] playerList) {
-        for (String name : playerList) {
-            this.playerList.add(new Player(name));
-        }
+    public GameManager(ArrayList<Player> playerList) {
+        this.playerList = playerList;
         playerCount = this.playerList.size();
         currPlayerIndex = (int) Math.floor(Math.random() * this.playerList.size());
         currPlayer = this.playerList.get(currPlayerIndex);
@@ -44,12 +43,15 @@ public class GameInstance {
     private void gameStart() {
         // game starts here
         while (true) {
+            System.out.println("----------------");
             System.out.println("Current player is: " + currPlayer.getName());
             currPlayer.draw(cardPile.pop());
             showHands();
             System.out.println("Hand of player is: " + currPlayer.getHand().toString());
-            System.out.print("Enter card index to play: ");
-            chosenCardIndex = inputReader.nextInt();
+            do {
+                System.out.print("Enter card index to play: ");
+                chosenCardIndex = inputReader.nextInt();
+            } while (chosenCardIndex != 0 && chosenCardIndex != 1);
             // Card stages:
             // has targets? t/f
             // how many targets6? 1/2
@@ -71,7 +73,7 @@ public class GameInstance {
                 do {
                     System.out.print("Enter index of one player: ");
                     chosenPlayer1 = playerList.get(inputReader.nextInt());
-                } while (chosenPlayer1.isIsAlive() && !chosenPlayer1.isIsProtected());
+                } while (!chosenPlayer1.isIsAlive() || chosenPlayer1.isIsProtected());
                 // TODO: check if this card can target self
 
                 // check if this card can guess
@@ -85,7 +87,8 @@ public class GameInstance {
                     do {
                         System.out.print("Enter index of another player: ");
                         chosenPlayer2 = playerList.get(inputReader.nextInt());
-                    } while (chosenPlayer2 == chosenPlayer1);
+                    } while (chosenPlayer2 == chosenPlayer1 || !chosenPlayer1.isIsAlive()
+                            || chosenPlayer1.isIsProtected());
                 }
 
             }
@@ -96,7 +99,8 @@ public class GameInstance {
             chosenNumber = -1;
             // next player turn
             do {
-                currPlayerIndex = (currPlayerIndex + 1) % (playerCount - 1);
+                currPlayerIndex = (currPlayerIndex + 1) % playerCount;
+                System.out.println("curr player index = " + currPlayerIndex);
                 currPlayer = playerList.get(currPlayerIndex);
             } while (!currPlayer.isIsAlive());
         }
@@ -115,46 +119,46 @@ public class GameInstance {
         // what to do based on the card
         switch (playedCard.getName()) {
             case "Jester" -> {
-                betOn(chosenPlayer1);
+                cardLogic.betOn(chosenPlayer1);
             }
             case "Guard" -> {
-                eliminate(chosenPlayer1, chosenNumber);
+                cardLogic.eliminate(chosenPlayer1, chosenNumber);
             }
             case "Priest" -> {
-                peek(chosenPlayer1, null);
+                cardLogic.peek(chosenPlayer1, null);
             }
             case "Cardinal" -> {
-                swap(chosenPlayer1, chosenPlayer2);
+                cardLogic.swap(chosenPlayer1, chosenPlayer2);
                 System.out.print("Enter index of one player to peek: ");
                 chosenPlayer1 = playerList.get(inputReader.nextInt());
-                peek(chosenPlayer1, null);
+                cardLogic.peek(chosenPlayer1, null);
             }
             case "Baron" -> {
-                compare(chosenPlayer1);
+                cardLogic.compare(chosenPlayer1);
             }
             case "Baroness" -> {
-                peek(chosenPlayer1, chosenPlayer2);
+                cardLogic.peek(chosenPlayer1, chosenPlayer2);
             }
             case "Handmaid" -> {
-                protect();
+                cardLogic.protect();
             }
             case "Sycophant" -> {
-                force(chosenPlayer1);
+                cardLogic.force(chosenPlayer1);
             }
             case "Prince" -> {
-                discard(chosenPlayer1);
+                cardLogic.discard(chosenPlayer1);
             }
             case "King" -> {
-                swap(currPlayer, chosenPlayer1);
+                cardLogic.swap(currPlayer, chosenPlayer1);
             }
             case "Queen" -> {
-                compareRev(chosenPlayer1);
+                cardLogic.compareRev(chosenPlayer1);
             }
             case "Princess" -> {
-                knockOut(currPlayer);
+                cardLogic.knockOut(currPlayer);
             }
             case "Bishop" -> {
-                guess(chosenPlayer1);
+                cardLogic.guess(chosenPlayer1);
             }
             // the effects of other cards should be calculated within class Player
             default -> {
@@ -170,10 +174,4 @@ public class GameInstance {
         }
         System.out.println(s);
     }
-
-    public static void main(String[] args) {
-        String[] playerList = { "A", "B", "C" };
-        GameInstance newGame = new GameInstance(playerList);
-    }
-
 }

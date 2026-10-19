@@ -11,8 +11,8 @@ public class Player {
     private int hasPrince = 0;
     private int hasKing = 0;
     private int hasAssassin = 0;
-    private int hasCount = 0;
-    private int hasConstable = 0;
+    private int activatedCount = 0;
+    private int activatedConstable = 0;
     private int winningTokenCount = 0;
 
     public Player(String name) {
@@ -32,7 +32,37 @@ public class Player {
 
     public void draw(Card card) {
         this.hand.add(card);
-        switch (card.getName()) {
+        syncHand();
+    }
+
+    public void discard() {
+        switch (hand.get(0).getName()) {
+            case "Count" -> {
+                activatedCount++;
+            }
+            case "Constable" -> {
+                activatedConstable++;
+            }
+            case "Princess" -> {
+                knockedOut();
+            }
+            default -> {
+            }
+        }
+        System.out.println("Player " + name + " has discarded " + hand.get(0).getName());
+        hand.clear();
+    }
+
+    public void knockedOut() {
+        System.out.println(name + " has been knocked out!");
+        isAlive = false;
+    }
+
+    public void syncHand() {
+        hasPrince = 0;
+        hasKing = 0;
+        hasAssassin = 0;
+        switch (hand.get(0).getName()) {
             case "Assassin" -> {
                 hasAssassin += 1;
             }
@@ -43,33 +73,6 @@ public class Player {
                 hasKing += 1;
             }
         }
-
-    }
-
-    public void discard() {
-        switch (hand.get(0).getName()) {
-            case "Assassin" -> {
-                hasAssassin--;
-            }
-            case "Prince" -> {
-                hasPrince--;
-            }
-            case "Count" -> {
-                hasCount++;
-            }
-            case "King" -> {
-                hasKing--;
-            }
-            case "Constable" -> {
-                hasConstable++;
-            }
-            case "Princess" -> {
-                isAlive = false;
-            }
-            default -> {
-            }
-        }
-        hand.clear();
     }
 
     public boolean isIsAlive() {
@@ -96,8 +99,8 @@ public class Player {
         return hasAssassin;
     }
 
-    public int getHasConstable() {
-        return hasConstable;
+    public int getActivatedConstable() {
+        return activatedConstable;
     }
 
     public void earnWinningToken() {
